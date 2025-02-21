@@ -35,8 +35,11 @@ import org.parosproxy.paros.extension.AbstractPanel;
 import org.zaproxy.zap.utils.DisplayUtils;
 import org.zaproxy.zap.utils.FontUtils;
 
-/** @deprecated (2.11.0) Superseded by the OAST add-on. */
+/**
+ * @deprecated (2.11.0) Superseded by the OAST add-on.
+ */
 @Deprecated
+@SuppressWarnings("serial")
 public class CallbackPanel extends AbstractPanel {
 
     private static final long serialVersionUID = 1L;

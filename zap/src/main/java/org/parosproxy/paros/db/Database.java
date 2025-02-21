@@ -19,6 +19,7 @@
  */
 package org.parosproxy.paros.db;
 
+import org.parosproxy.paros.extension.option.DatabaseParam;
 import org.zaproxy.zap.db.TableAlertTag;
 
 /**
@@ -32,11 +33,22 @@ public interface Database {
     /** The default HyperSQL Db: http://hsqldb.org/ */
     public static final String DB_TYPE_HSQLDB = "hsqldb";
 
+    /**
+     * Sets the database options.
+     *
+     * @param options the database options, must not be {@code null}.
+     * @throws NullPointerException if the {@code options} is {@code null}.
+     * @since 2.14.0
+     */
+    default void setDatabaseOptions(DatabaseParam options) {}
+
     DatabaseServer getDatabaseServer();
 
     TableHistory getTableHistory();
 
-    /** @return Returns the tableSession. */
+    /**
+     * @return Returns the tableSession.
+     */
     TableSession getTableSession();
 
     void addDatabaseListener(DatabaseListener listener);
@@ -84,20 +96,28 @@ public interface Database {
     // ZAP comment as the content was moved from the paros method close(boolean).
     void close(boolean compact, boolean cleanup);
 
-    /** @return Returns the tableAlert. */
+    /**
+     * @return Returns the tableAlert.
+     */
     TableAlert getTableAlert();
 
-    /** @param tableAlert The tableAlert to set. */
+    /**
+     * @param tableAlert The tableAlert to set.
+     */
     void setTableAlert(TableAlert tableAlert);
 
     TableAlertTag getTableAlertTag();
 
     void setTableAlertTag(TableAlertTag tableAlertTag);
 
-    /** @return Returns the tableScan. */
+    /**
+     * @return Returns the tableScan.
+     */
     TableScan getTableScan();
 
-    /** @param tableScan The tableScan to set. */
+    /**
+     * @param tableScan The tableScan to set.
+     */
     void setTableScan(TableScan tableScan);
 
     TableTag getTableTag();

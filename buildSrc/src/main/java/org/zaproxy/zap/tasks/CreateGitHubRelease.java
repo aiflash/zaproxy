@@ -31,15 +31,12 @@ import org.apache.commons.codec.digest.DigestUtils;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.InvalidUserDataException;
-import org.gradle.api.Named;
 import org.gradle.api.NamedDomainObjectContainer;
-import org.gradle.api.Project;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Nested;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
@@ -238,39 +235,6 @@ public abstract class CreateGitHubRelease extends DefaultTask {
                     .append(") | `")
                     .append(digestUtils.digestAsHex(file))
                     .append("` |\n");
-        }
-    }
-
-    public static final class Asset implements Named {
-
-        private final String label;
-        private final RegularFileProperty file;
-        private final Property<String> contentType;
-
-        public Asset(String label, Project project) {
-            this.label = label;
-
-            ObjectFactory objectFactory = project.getObjects();
-            this.file = objectFactory.fileProperty();
-            this.contentType =
-                    objectFactory.property(String.class).value("application/octet-stream");
-        }
-
-        @Internal
-        @Override
-        public String getName() {
-            return label;
-        }
-
-        @InputFile
-        @PathSensitive(PathSensitivity.NONE)
-        public RegularFileProperty getFile() {
-            return file;
-        }
-
-        @Input
-        public Property<String> getContentType() {
-            return contentType;
         }
     }
 }

@@ -65,10 +65,9 @@ import org.parosproxy.paros.model.HistoryReference;
 import org.parosproxy.paros.network.HttpMessage;
 import org.zaproxy.zap.extension.pscan.ExtensionPassiveScan;
 import org.zaproxy.zap.extension.pscan.PluginPassiveScanner;
-import org.zaproxy.zap.model.Vulnerabilities;
-import org.zaproxy.zap.model.Vulnerability;
 import org.zaproxy.zap.utils.DisplayUtils;
 import org.zaproxy.zap.utils.FontUtils;
+import org.zaproxy.zap.utils.Stats;
 import org.zaproxy.zap.utils.ZapLabel;
 import org.zaproxy.zap.utils.ZapNumberSpinner;
 import org.zaproxy.zap.utils.ZapTextArea;
@@ -76,10 +75,11 @@ import org.zaproxy.zap.utils.ZapTextField;
 import org.zaproxy.zap.view.LayoutHelper;
 import org.zaproxy.zap.view.ZapTable;
 
+@SuppressWarnings("serial")
 public class AlertViewPanel extends AbstractPanel {
 
     private static final long serialVersionUID = 1L;
-    private static final Logger logger = LogManager.getLogger(AlertViewPanel.class);
+    private static final Logger LOGGER = LogManager.getLogger(AlertViewPanel.class);
 
     private static final int UNDEFINED_ID = -1;
 
@@ -98,6 +98,7 @@ public class AlertViewPanel extends AbstractPanel {
     private ZapLabel alertParam = null;
     private ZapLabel alertAttack = null;
     private ZapLabel alertEvidence = null;
+    private ZapLabel alertInputVector;
     private ZapTextArea alertDescription = null;
     private ZapTextArea alertOtherInfo = null;
     private ZapTextArea alertSolution = null;
@@ -107,6 +108,8 @@ public class AlertViewPanel extends AbstractPanel {
     private ZapLabel alertCweId = null;
     private ZapLabel alertWascId = null;
     private ZapLabel alertSource;
+    private JLabel alertRefLabel;
+    private ZapLabel alertRef;
 
     private JComboBox<String> alertEditName = null;
     private JComboBox<String> alertEditRisk = null;
@@ -122,6 +125,7 @@ public class AlertViewPanel extends AbstractPanel {
     private JLabel attackLabel;
     private JLabel cweidLabel;
     private JLabel evidenceLabel;
+    private JLabel inputVectorLabel;
     private JLabel otherLabel;
     private JLabel confidenceLabel;
     private JLabel riskLabel;
@@ -134,7 +138,6 @@ public class AlertViewPanel extends AbstractPanel {
 
     private boolean editable = false;
     private Alert originalAlert = null;
-    private List<Vulnerability> vulnerabilities = null;
 
     private HistoryReference historyRef = null;
 
@@ -218,11 +221,15 @@ public class AlertViewPanel extends AbstractPanel {
             alertEditName.addActionListener(
                     new ActionListener() {
                         @Override
+                        @SuppressWarnings("removal")
                         public void actionPerformed(ActionEvent e) {
                             if ("comboBoxChanged".equals(e.getActionCommand())) {
-                                Vulnerability v =
+                                org.zaproxy.zap.model.Vulnerability v =
                                         getVulnerability((String) alertEditName.getSelectedItem());
                                 if (v != null) {
+                                    Stats.incCounter(
+                                            "stats.ui.alert.panel.vuln.selected." + v.getWascId());
+
                                     if (v.getDescription() != null
                                             && v.getDescription().length() > 0) {
                                         setAlertDescription(v.getDescription());
@@ -282,10 +289,17 @@ public class AlertViewPanel extends AbstractPanel {
             alertAttack.setLineWrap(true);
             alertEvidence = new ZapLabel();
             alertEvidence.setLineWrap(true);
+            alertInputVector = new ZapLabel();
+            alertInputVector.setLineWrap(true);
             alertCweId = new ZapLabel();
             alertWascId = new ZapLabel();
             alertSource = new ZapLabel();
             alertSource.setLineWrap(true);
+
+            alertRefLabel = new JLabel(Constant.messages.getString("alert.label.alertRef"));
+            alertRef = new ZapLabel();
+            alertRef.setLineWrap(true);
+            alertRefLabel.setLabelFor(alertRef);
 
             alertUrl = new ZapLabel();
             alertUrl.setLineWrap(true);
@@ -403,6 +417,16 @@ public class AlertViewPanel extends AbstractPanel {
                 alertDisplay.add(
                         getSourceLabel(), LayoutHelper.getGBC(0, gbcRow, 1, 0, DEFAULT_INSETS));
                 alertDisplay.add(alertSource, LayoutHelper.getGBC(1, gbcRow, 1, 1, DEFAULT_INSETS));
+                gbcRow++;
+                alertDisplay.add(
+                        alertRefLabel, LayoutHelper.getGBC(0, gbcRow, 1, 0, DEFAULT_INSETS));
+                alertDisplay.add(alertRef, LayoutHelper.getGBC(1, gbcRow, 1, 1, DEFAULT_INSETS));
+                gbcRow++;
+                alertDisplay.add(
+                        getInputVectorLabel(),
+                        LayoutHelper.getGBC(0, gbcRow, 1, 0, DEFAULT_INSETS));
+                alertDisplay.add(
+                        alertInputVector, LayoutHelper.getGBC(1, gbcRow, 1, 1, DEFAULT_INSETS));
                 gbcRow++;
             }
 
@@ -573,9 +597,19 @@ public class AlertViewPanel extends AbstractPanel {
             alertParam.setText(alert.getParam());
             alertAttack.setText(alert.getAttack());
             alertEvidence.setText(alert.getEvidence());
+            alertInputVector.setText(getInputVectorName(alert));
             alertCweId.setText(normalisedId(alert.getCweId()));
             alertWascId.setText(normalisedId(alert.getWascId()));
             alertSource.setText(getSourceData(alert));
+            boolean showAlertRef = true;
+            if (String.valueOf(alert.getPluginId()).equals(alert.getAlertRef())) {
+                alertRef.setText("");
+                showAlertRef = false;
+            } else {
+                alertRef.setText(alert.getAlertRef());
+            }
+            alertRefLabel.setVisible(showAlertRef);
+            alertRef.setVisible(showAlertRef);
         }
 
         setAlertDescription(alert.getDescription());
@@ -620,6 +654,18 @@ public class AlertViewPanel extends AbstractPanel {
         return strBuilder.toString();
     }
 
+    private static String getInputVectorName(Alert alert) {
+        String inputVector = alert.getInputVector();
+        if (inputVector.isEmpty()) {
+            return "";
+        }
+        String key = "variant.shortname." + inputVector;
+        if (Constant.messages.containsKey(key)) {
+            return Constant.messages.getString(key);
+        }
+        return inputVector;
+    }
+
     public void clearAlert() {
         cardLayout.show(this, getDefaultPane().getName());
 
@@ -637,6 +683,8 @@ public class AlertViewPanel extends AbstractPanel {
         alertSolution.setText("");
         alertReference.setText("");
         alertSource.setText("");
+        alertRef.setText("");
+        alertInputVector.setText("");
         setAlertTags(Collections.emptyMap());
 
         if (editable) {
@@ -692,7 +740,7 @@ public class AlertViewPanel extends AbstractPanel {
                         }
                     });
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            LOGGER.error(e.getMessage(), e);
         }
     }
 
@@ -719,6 +767,7 @@ public class AlertViewPanel extends AbstractPanel {
             alert.setSolution(alertSolution.getText());
             alert.setReference(alertReference.getText());
             alert.setEvidence(alertEvidence.getText());
+            alert.setInputVector(originalAlert.getInputVector());
             alert.setCweId(alertEditCweId.getValue());
             alert.setWascId(alertEditWascId.getValue());
             alert.setHistoryRef(historyRef);
@@ -737,8 +786,10 @@ public class AlertViewPanel extends AbstractPanel {
         if (originalAlert != null) {
             alert.setAlertId(originalAlert.getAlertId());
             alert.setSource(originalAlert.getSource());
+            alert.setInputVector(originalAlert.getInputVector());
         }
 
+        int historyId = 0;
         String uri = null;
         HttpMessage msg = null;
         if (httpMessage != null) {
@@ -746,12 +797,14 @@ public class AlertViewPanel extends AbstractPanel {
             msg = httpMessage;
         } else if (historyRef != null) {
             try {
+                historyId = historyRef.getHistoryId();
                 uri = historyRef.getURI().toString();
                 msg = historyRef.getHttpMessage();
             } catch (Exception e) {
-                logger.error(e.getMessage(), e);
+                LOGGER.error(e.getMessage(), e);
             }
         } else if (originalAlert != null) {
+            historyId = originalAlert.getHistoryId();
             uri = originalAlert.getUri();
             msg = originalAlert.getMessage();
         }
@@ -767,6 +820,7 @@ public class AlertViewPanel extends AbstractPanel {
                 alertEditCweId.getValue(),
                 alertEditWascId.getValue(),
                 msg);
+        alert.setHistoryId(historyId);
         alert.setTags(getAlertTags());
         return alert;
     }
@@ -785,7 +839,7 @@ public class AlertViewPanel extends AbstractPanel {
                 this.alertUrl.setText(msg.getRequestHeader().getURI().toString());
             }
         } catch (Exception e) {
-            logger.error(e.getMessage(), e);
+            LOGGER.error(e.getMessage(), e);
         }
     }
 
@@ -805,19 +859,14 @@ public class AlertViewPanel extends AbstractPanel {
         return editable;
     }
 
-    private List<Vulnerability> getAllVulnerabilities() {
-        if (vulnerabilities == null) {
-            vulnerabilities = Vulnerabilities.getAllVulnerabilities();
-        }
-        return vulnerabilities;
-    }
-
-    private Vulnerability getVulnerability(String alert) {
+    @SuppressWarnings("removal")
+    private org.zaproxy.zap.model.Vulnerability getVulnerability(String alert) {
         if (alert == null) {
             return null;
         }
-        List<Vulnerability> vulns = this.getAllVulnerabilities();
-        for (Vulnerability v : vulns) {
+        List<org.zaproxy.zap.model.Vulnerability> vulns =
+                org.zaproxy.zap.model.Vulnerabilities.getAllVulnerabilities();
+        for (org.zaproxy.zap.model.Vulnerability v : vulns) {
             if (alert.equals(v.getAlert())) {
                 return v;
             }
@@ -825,10 +874,12 @@ public class AlertViewPanel extends AbstractPanel {
         return null;
     }
 
+    @SuppressWarnings("removal")
     private List<String> getAllVulnerabilityNames() {
-        List<Vulnerability> vulns = this.getAllVulnerabilities();
+        List<org.zaproxy.zap.model.Vulnerability> vulns =
+                org.zaproxy.zap.model.Vulnerabilities.getAllVulnerabilities();
         List<String> names = new ArrayList<>(vulns.size());
-        for (Vulnerability v : vulns) {
+        for (org.zaproxy.zap.model.Vulnerability v : vulns) {
             names.add(v.getAlert());
         }
         Collections.sort(names);
@@ -884,6 +935,13 @@ public class AlertViewPanel extends AbstractPanel {
             evidenceLabel = new JLabel(Constant.messages.getString("alert.label.evidence"));
         }
         return evidenceLabel;
+    }
+
+    private JLabel getInputVectorLabel() {
+        if (inputVectorLabel == null) {
+            inputVectorLabel = new JLabel(Constant.messages.getString("alert.label.inputvector"));
+        }
+        return inputVectorLabel;
     }
 
     private JLabel getParameterLabel() {

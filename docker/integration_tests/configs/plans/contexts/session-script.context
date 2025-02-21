@@ -13,6 +13,7 @@
             <include>Db.Firebird</include>
             <include>Db.HypersonicSQL</include>
             <include>Db.IBM DB2</include>
+            <include>Db.MariaDB</include>
             <include>Db.Microsoft Access</include>
             <include>Db.Microsoft SQL Server</include>
             <include>Db.MongoDB</include>
@@ -66,7 +67,7 @@
             <type>2</type>
             <script>
                 <name>session-mgmt-script.js</name>
-                <params>YWFh:QUFB&amp;Y2Nj:Q0ND&amp;YmJi:QkJC&amp;ZGRk:RERE</params>
+                <params>YWFh:QUFB&amp;Y2Nj:Q0ND&amp;YmJi:QkJC&amp;ZGRk:RERE&amp;c2NyaXB0RW5naW5l:R3JhYWwuanM=&amp;c2NyaXB0:L3phcC93cmsvY29uZmlncy9zY3JpcHRzL3Nlc3Npb24vc2Vzc2lvbi1tZ210LXNjcmlwdC5qcw==</params>
             </script>
         </session>
         <authorization>

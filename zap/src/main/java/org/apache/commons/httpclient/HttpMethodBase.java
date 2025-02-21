@@ -53,7 +53,7 @@ import org.apache.commons.httpclient.params.HttpMethodParams;
 import org.apache.commons.httpclient.protocol.Protocol;
 import org.apache.commons.httpclient.util.EncodingUtil;
 import org.apache.commons.httpclient.util.ExceptionUtil;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.parosproxy.paros.network.HttpHeader;
@@ -118,7 +118,9 @@ import org.parosproxy.paros.network.HttpHeader;
  * @author Christian Kohlschuetter
  *
  * @version $Revision: 775455 $ $Date: 2009-05-16 13:28:40 +0100 (Sat, 16 May 2009) $
+ * @deprecated (2.12.0) Implementation details, do not use.
  */
+@Deprecated
 public abstract class HttpMethodBase implements HttpMethod {
 
     private static final String HOST_HEADER = "Host";

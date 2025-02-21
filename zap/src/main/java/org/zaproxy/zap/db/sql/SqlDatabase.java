@@ -21,6 +21,7 @@ package org.zaproxy.zap.db.sql;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.parosproxy.paros.db.AbstractDatabase;
 import org.parosproxy.paros.db.DatabaseException;
 import org.parosproxy.paros.db.DatabaseListener;
@@ -34,6 +35,7 @@ import org.parosproxy.paros.db.TableSession;
 import org.parosproxy.paros.db.TableSessionUrl;
 import org.parosproxy.paros.db.TableStructure;
 import org.parosproxy.paros.db.TableTag;
+import org.parosproxy.paros.extension.option.DatabaseParam;
 import org.zaproxy.zap.db.TableAlertTag;
 
 public class SqlDatabase extends AbstractDatabase {
@@ -49,6 +51,7 @@ public class SqlDatabase extends AbstractDatabase {
     private TableParam tableParam = null;
     private TableContext tableContext = null;
     private TableStructure tableStructure = null;
+
     /**
      * {@code DatabaseListener}s added internally when the {@code SqlDatabase} is constructed.
      *
@@ -83,13 +86,23 @@ public class SqlDatabase extends AbstractDatabase {
         internalDatabaseListeners.add(tableStructure);
     }
 
-    /** @return Returns the databaseServer */
+    @Override
+    public void setDatabaseOptions(DatabaseParam options) {
+        Objects.requireNonNull(options);
+        tableHistory.setDatabaseOptions(options);
+    }
+
+    /**
+     * @return Returns the databaseServer
+     */
     @Override
     public DatabaseServer getDatabaseServer() {
         return databaseServer;
     }
 
-    /** @param databaseServer The databaseServer to set. */
+    /**
+     * @param databaseServer The databaseServer to set.
+     */
     protected void setDatabaseServer(SqlDatabaseServer databaseServer) {
         this.databaseServer = databaseServer;
     }
@@ -107,7 +120,7 @@ public class SqlDatabase extends AbstractDatabase {
     @Override
     public final void open(String path) throws Exception {
         // ZAP: Added log statement.
-        getLogger().debug("open " + path);
+        getLogger().debug("open {}", path);
         setDatabaseServer(createDatabaseServer(path));
         notifyListenersDatabaseOpen(internalDatabaseListeners, getDatabaseServer());
         notifyListenersDatabaseOpen(getDatabaseServer());
@@ -131,7 +144,7 @@ public class SqlDatabase extends AbstractDatabase {
 
     @Override
     public void deleteSession(String sessionName) {
-        getLogger().debug("deleteSession " + sessionName);
+        getLogger().debug("deleteSession {}", sessionName);
         if (databaseServer == null) {
             return;
         }

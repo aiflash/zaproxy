@@ -31,18 +31,18 @@ import org.zaproxy.zap.control.AddOn.AddOnRunRequirements;
 import org.zaproxy.zap.control.AddOnCollection;
 import org.zaproxy.zap.extension.autoupdate.AddOnWrapper.Status;
 
+@SuppressWarnings("serial")
 public class InstalledAddOnsTableModel extends AddOnsTableModel {
 
     private static final long serialVersionUID = 1L;
 
     private static final String[] COLUMN_NAMES = {
-        "", // Column for warning of running issues (e.g. incorrect Java version, missing
-        // dependency...)
+        Constant.messages.getString("cfu.table.header.note"),
         Constant.messages.getString("cfu.table.header.name"),
         Constant.messages.getString("cfu.table.header.version"),
         Constant.messages.getString("cfu.table.header.desc"),
         Constant.messages.getString("cfu.table.header.update"),
-        ""
+        Constant.messages.getString("cfu.table.header.selected")
     };
 
     private static final int COLUMN_COUNT = COLUMN_NAMES.length;

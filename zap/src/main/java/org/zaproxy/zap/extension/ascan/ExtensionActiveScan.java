@@ -59,12 +59,13 @@ import org.zaproxy.zap.model.StructuralNode;
 import org.zaproxy.zap.model.StructuralSiteNode;
 import org.zaproxy.zap.model.Target;
 import org.zaproxy.zap.users.User;
+import org.zaproxy.zap.utils.Stats;
 import org.zaproxy.zap.view.ZapMenuItem;
 
 public class ExtensionActiveScan extends ExtensionAdaptor
         implements SessionChangedListener, CommandLineListener, ScanController<ActiveScan> {
 
-    private static final Logger logger = LogManager.getLogger(ExtensionActiveScan.class);
+    private static final Logger LOGGER = LogManager.getLogger(ExtensionActiveScan.class);
     private static final int ARG_SCAN_IDX = 0;
 
     public static final String NAME = "ExtensionActiveScan";
@@ -189,6 +190,10 @@ public class ExtensionActiveScan extends ExtensionAdaptor
         this.activeScanApi = new ActiveScanAPI(this);
         this.activeScanApi.addApiOptions(getScannerParam());
         extensionHook.addApiImplementor(activeScanApi);
+
+        String deprecationDesc = Constant.messages.getString("ascan.api.delay.deprecated");
+        activeScanApi.getApiView("optionDelayInMs").setDeprecatedDescription(deprecationDesc);
+        activeScanApi.getApiAction("setOptionDelayInMs").setDeprecatedDescription(deprecationDesc);
     }
 
     private ImageIcon createIcon(String iconName) {
@@ -332,6 +337,7 @@ public class ExtensionActiveScan extends ExtensionAdaptor
                         @Override
                         public void actionPerformed(java.awt.event.ActionEvent e) {
                             showPolicyManagerDialog();
+                            Stats.incCounter("stats.ui.maintoolbar.button.ascan.policy");
                         }
                     });
         }
@@ -386,7 +392,7 @@ public class ExtensionActiveScan extends ExtensionAdaptor
                 getModel().getOptionsParam().getConfig().save();
 
             } catch (ConfigurationException ce) {
-                logger.error(ce.getMessage(), ce);
+                LOGGER.error(ce.getMessage(), ce);
                 getView().showWarningDialog(Constant.messages.getString("scanner.save.warning"));
             }
         }
@@ -431,7 +437,7 @@ public class ExtensionActiveScan extends ExtensionAdaptor
                         });
 
             } catch (InterruptedException | InvocationTargetException e) {
-                logger.error(e.getMessage(), e);
+                LOGGER.error(e.getMessage(), e);
             }
         }
     }
